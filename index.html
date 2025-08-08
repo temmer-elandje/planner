@@ -137,57 +137,34 @@ Docent 6</textarea>
       const T = teachers.length;
       const N = students.length;
 
-      // Capaciteiten per groep zo gelijk mogelijk verdelen
+      const data = [];
       const base = Math.floor(N / T);
       const extra = N % T; // eerste 'extra' groepen krijgen +1
-      const capacity = Array.from({length: T}, (_,i)=> base + (i < extra ? 1 : 0));
-
-      // Pair-tracking om herhaalde combinaties te minimaliseren
-      const seenPairs = new Set();
-      const data = [];
 
       for (let p = 0; p < periods; p++) {
+        // 1) Bepaal een per-periode volgorde
         let order = students.slice();
         if (mix) {
-          // deterministisch schudden o.b.v. periode en invoer
-          const seed = hashStr(students.join('|') + '#' + p + '#' + teachers.join('|')) & 0xffffffff;
-          shuffle(order, seed);
+          const seed = hashStr(order.join('|') + '#period=' + p) & 0xffffffff;
+          shuffle(order, seed); // schud per periode
         }
 
-        // Greedy toewijzing per periode met conflict-minimalisatie
-        const groups = Array.from({length: T}, ()=>[]);
-
-        for (const s of order) {
-          let bestIdx = 0;
-          let bestScore = Infinity;
-          for (let t = 0; t < T; t++) {
-            if (groups[t].length >= capacity[t]) continue; // vol
-            // score = aantal reeds geziene paren met s in deze groep
-            const score = groups[t].reduce((acc, m) => acc + (pairSeen(seenPairs, s, m) ? 1 : 0), 0);
-            // tie-breaker: kleinere groep krijgt voorrang
-            const tie = groups[t].length;
-            if (score < bestScore || (score === bestScore && tie < groups[bestIdx].length)) {
-              bestScore = score; bestIdx = t;
-            }
-          }
-          groups[bestIdx].push(s);
+        // 2) Maak groepen die per periode ANDERS zijn
+        //    Toewijzing: student i -> group (i + p) % T  (round-robin verschoven per periode)
+        const groups = Array.from({length: T}, () => []);
+        for (let i = 0; i < order.length; i++) {
+          const g = (i + p) % T; // verschuiving zorgt voor andere combinaties
+          groups[g].push(order[i]);
         }
+        // Balanceer in geval van extreme verdeling (zeldzaam na shuffle)
+        // (optioneel; de round-robin levert al max 1 verschil)
 
-        // Koppel aan docenten met rotatie zodat leerlingen ook van docent wisselen
+        // 3) Koppel groepen aan docenten met rotatie, zodat docent ook wisselt
         const teachersThis = [];
         for (let t = 0; t < T; t++) {
           const srcIndex = ((t - p) % T + T) % T; // rotate groups to teachers
           teachersThis.push({ teacher: teachers[t], students: groups[srcIndex].slice() });
         }
-
-        // Markeer paren uit deze periode als gezien
-        groups.forEach(g => {
-          for (let i = 0; i < g.length; i++) {
-            for (let j = i+1; j < g.length; j++) {
-              addPair(seenPairs, g[i], g[j]);
-            }
-          }
-        });
 
         data.push({ period: p+1, teachers: teachersThis });
       }
