@@ -64,10 +64,13 @@ Docent 6</textarea>
       <div class="toolbar" style="margin-top:.8rem">
         <button class="btn" id="btn-generate">Genereer rooster</button>
         <button class="btn secondary" id="btn-sample">Vul voorbeeldleerlingen</button>
+        <label style="display:inline-flex; align-items:center; gap:.4rem; font-weight:600">
+          <input id="mix" type="checkbox" checked /> Groepen door elkaar per periode
+        </label>
         <button class="btn ghost" id="btn-export-csv" disabled>Exporteer CSV</button>
         <button class="btn ghost" id="btn-export-json" disabled>Exporteer JSON</button>
       </div>
-      <div class="hint" style="margin-top:.6rem">Rotatieregel: in periode <em>p</em> krijgt docent met index <em>t</em> alle leerlingen <em>i</em> waarvoor <code>(i + p) mod T == t</code>. Zo schuift iedereen telkens één docent door.</div>
+      <div class="hint" style="margin-top:.6rem">Rotatieregel: in periode <em>p</em> krijgt een docent een <em>andere</em> groep én schuift de groep naar een andere docent. Met de optie hierboven zorgen we ook dat de <em>groepssamenstelling</em> per periode wijzigt met zo min mogelijk herhaalde duo's.</div> style="margin-top:.6rem">Rotatieregel: in periode <em>p</em> krijgt docent met index <em>t</em> alle leerlingen <em>i</em> waarvoor <code>(i + p) mod T == t</code>. Zo schuift iedereen telkens één docent door.</div>
     </section>
 
     <section id="output" class="card">
@@ -87,6 +90,7 @@ Docent 6</textarea>
     const btnCSV = el('#btn-export-csv');
     const btnJSON = el('#btn-export-json');
     const btnSample = el('#btn-sample');
+    const mixBox = el('#mix');
 
     let lastSchedule = null; // for export
 
@@ -251,3 +255,4 @@ Docent 6</textarea>
   </script>
 </body>
 </html>
+
